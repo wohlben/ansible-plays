@@ -1,0 +1,73 @@
+- name: verfiy distribution
+  fail: msg="unsupported distribution"
+  when: "ansible_distribution != 'Ubuntu'"
+
+- name: verify architecture
+  fail: msg="unsupported architecture"
+  when: "ansible_architecture != 'x86_64'"
+
+- name: verify user
+  fail: msg="no keybase user defined"
+  when: "management_user is undefined and \
+         keybase_user    is undefined"
+
+- name: check keybase path
+  shell: which keybase
+  failed_when: false
+  check_mode: no
+  changed_when: false
+  register: keybase_path
+
+- name: check keybase_version
+  shell: keybase --version
+  changed_when: false
+  check_mode: no
+  register: installed_keybase_version
+
+- name: install keybase
+  apt: deb="https://prerelease.keybase.io/keybase_amd64.deb"
+  when: "keybase_path.stdout != '/usr/bin/keybase' or \
+         keybase_version not in installed_keybase_version.stdout"
+  register: keybase_install
+
+- name: install missing dependencies
+  command: apt-get install -f
+  when: keybase_install|changed
+
+- name: create keybase service
+  template:
+    src: keybase.systemd
+    dest: /etc/systemd/system/keybase.service
+    force: yes
+    mode: "0644"
+    group: root
+    owner: root
+    # validate: "/usr/bin/systemd-analyze verify %s"
+    # filename triggers invalid (requires *.service file, is /source on validation)
+
+- name: enable keybase service
+  systemd:
+    name: keybase
+    enabled: yes
+    state: started
+    daemon_reload: yes
+
+- name: check keybase private directory
+  stat: path="/keybase/private/{{ keybase_user|default(management_user) }}"
+  become_user: "{{ keybase_user|default(management_user) }}"
+  register: keybase_data_dir
+
+- name: verify keybase authentication
+  fail: msg="you need to manually authenticate this machine"
+  when: "keybase_data_dir.stat.isdir is undefined or \
+         keybase_data_dir.stat.isdir == False"
+
+- name: symlink ssh folder
+  file:
+    state: link
+    src: "/keybase/private/{{ keybase_user|default(management_user) }}/ssh/{{ item }}"
+    dest: "/home/{{ management_user }}/.ssh/{{ item }}"
+  become_user: "{{ keybase_user|default(management_user) }}"
+  with_items:
+    - id_ecdsa
+    - id_ecdsa.pub

@@ -1,0 +1,13 @@
+[Unit]
+Description=KBFS service
+Wants=network-online.target
+After=network-online.target network.target
+
+[Service]
+Type=forking
+User={{ keybase_user|default(management_user) }}
+ExecStart=/usr/bin/run_keybase
+
+
+[Install]
+WantedBy=multi-user.target

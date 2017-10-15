@@ -1,0 +1,18 @@
+- hosts: 192.168.0.208
+  user: root
+  become: yes
+
+  vars:
+    update_dotfiles_repo: no
+
+  roles:
+    - docker
+    - keybase
+    - management
+    - histdb-sync
+    - samba
+
+  pre_tasks:
+    - name: verfiy server
+      fail: msg="unexpected server {{ ansible_nodename }}"
+      when: "ansible_nodename != 'server'"

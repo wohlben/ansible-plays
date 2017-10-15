@@ -1,0 +1,6 @@
+management_user: wohlben
+dotfile_links:
+  - zshrc
+  - vim
+  - vimrc
+  - gitconfig

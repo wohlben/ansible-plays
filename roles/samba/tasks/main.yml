@@ -1,0 +1,9 @@
+- name: verfiy distribution
+  fail:
+    msg: unsupported distribution
+  when: "ansible_distribution != 'Ubuntu'"
+
+- name: install package
+  apt:
+    name: samba
+    install_recommends: yes

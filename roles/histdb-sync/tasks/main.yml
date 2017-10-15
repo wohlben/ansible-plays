@@ -1,0 +1,23 @@
+- name: clone history repository
+  git:
+    accept_hostkey: yes
+    clone: yes
+    force: no
+    repo: "{{ management_user }}@bitbucket.org:{{ management_user }}/zsh-history.git"
+    key_file: "/keybase/private/{{ keybase_user|default(management_user) }}/ssh/id_ecdsa"
+    dest: "/home/{{ management_user }}/.histdb"
+  become_user: "{{ management_user }}"
+  ignore_errors: true
+
+- name: add histdb merge driver to git repository
+  blockinfile:
+    path: "/home/{{ management_user }}/.histdb/.git/config"
+    block: |
+      [merge "histdb"]
+        driver = /home/{{ management_user }}/.dotfiles/zsh_custom/plugins/histdb/zsh-histdb/histdb-merge %O %A %B
+
+- name: create sync cronjob
+  cron:
+    name: sync histdb
+    job: "/home/{{ management_user }}/scripts/sync_history.sh 2> /dev/null"
+    user: "{{ management_user }}"

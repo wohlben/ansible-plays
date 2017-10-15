@@ -1,0 +1,76 @@
+- name: install packages
+  apt:
+    name: "{{ item }}"
+    install_recommends: yes
+  with_items:
+    - "gparted"
+    - "zsh"
+    - "sqlite3"
+
+- name: verify management_user
+  fail: msg="no management_user defined"
+  when: management_user is undefined
+
+- name: create group for management user
+  group:
+    name: "{{ management_user }}"
+
+- name: create management user
+  user:
+    name: "{{ management_user }}"
+    createhome: yes
+    append: yes
+    group: ben
+    shell: /usr/bin/zsh
+
+- name: add keys to management user
+  authorized_key:
+    user: "{{ management_user }}"
+    key: https://github.com/{{ management_user }}.keys
+    manage_dir: yes
+
+- name: add management user to sudoers
+  copy:
+    dest: "/etc/sudoers.d/{{ management_user }}"
+    content: "{{ management_user }} ALL=(ALL) NOPASSWD: ALL"
+    validate: "/usr/sbin/visudo -cf %s"
+
+- name: get dotfiles from repo
+  git:
+    accept_hostkey: yes
+    clone: yes
+    dest: "/home/{{ management_user }}/.dotfiles"
+    recursive: yes
+    repo: https://github.com/{{ management_user }}/dotfiles.git
+    update: "{{ update_dotfiles_repo | default('yes') }}"
+  become_user: "{{ management_user }}"
+
+- name: get scripts from repo
+  git:
+    accept_hostkey: yes
+    clone: yes
+    dest: "/home/{{ management_user }}/scripts"
+    recursive: yes
+    repo: https://github.com/{{ management_user }}/scripts.git
+    update: yes
+  become_user: "{{ management_user }}"
+
+- name: create symlinks for dotfiles
+  file:
+    state: link
+    src: "/home/{{ management_user }}/.dotfiles/{{ item }}"
+    dest: "/home/{{ management_user }}/.{{ item }}"
+  with_items: "{{ dotfile_links }}"
+
+- name: set vim as default editor
+  alternatives:
+    name: editor
+    path: /usr/bin/vim.basic
+    priority: 50
+
+
+
+#- git
+#- file:
+#    path: /home/
+#    https://raw.githubusercontent.com/tpope/vim-pathogen/master/autoload/pathogen.vim

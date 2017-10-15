@@ -1,0 +1,17 @@
+- name: verfiy distribution
+  fail:
+    msg: unsupported distribution
+  when: "ansible_distribution != 'Ubuntu'"
+
+- name: common packages
+  apt:
+    name: "{{ item }}"
+    install_recommends: yes
+  with_items:
+    - python-apt
+    - aptitude  # can be removed after ansible 2.4
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - software-properties-common
+    - git
