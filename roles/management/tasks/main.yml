@@ -45,6 +45,12 @@
     update: "{{ update_dotfiles_repo | default('yes') }}"
   become_user: "{{ management_user }}"
 
+- name: create cronjob to keep the dotfiles up-to-date
+  cron:
+    name: update dotfiles repo
+    job: "/home/{{ management_user }}/scripts/update_repository.sh /home/{{ management_user }}/.dotfiles > /dev/null"
+    user: "{{ management_user }}"
+
 - name: get scripts from repo
   git:
     accept_hostkey: yes
@@ -54,6 +60,13 @@
     repo: https://github.com/{{ management_user }}/scripts.git
     update: yes
   become_user: "{{ management_user }}"
+
+
+- name: create cronjob to keep scripts up-to-date
+  cron:
+    name: update scripts repo
+    job: "/home/{{ management_user }}/scripts/update_repository.sh /home/{{ management_user }}/scripts > /dev/null"
+    user: "{{ management_user }}"
 
 - name: create symlinks for dotfiles
   file:
