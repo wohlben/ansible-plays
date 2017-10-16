@@ -6,6 +6,7 @@
     - "gparted"
     - "zsh"
     - "sqlite3"
+    - "apt-file"
 
 - name: verify management_user
   fail: msg="no management_user defined"
