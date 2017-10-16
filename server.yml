@@ -6,6 +6,7 @@
     update_dotfiles_repo: no
 
   roles:
+    - unattended_upgrades
     - docker
     - keybase
     - management

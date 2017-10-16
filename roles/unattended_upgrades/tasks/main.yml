@@ -1,0 +1,23 @@
+- name: verfiy distribution
+  fail: msg="unsupported distribution"
+  when: "ansible_distribution != 'Ubuntu'"
+
+- name: install package
+  apt:
+    name: unattended-upgrades
+    install_recommends: yes
+
+- name: create upgrades config file
+  template:
+    src: unattended-upgrades.apt.conf
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+    backup: yes
+
+- name: activate service
+  systemd:
+    name: unattended-upgrades
+    enabled: yes
+    state: started
