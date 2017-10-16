@@ -1,3 +1,4 @@
+default_locale: "de_DE.UTF-8"
 management_user: wohlben
 dotfile_links:
   - zshrc

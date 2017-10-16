@@ -15,3 +15,17 @@
     - curl
     - software-properties-common
     - git
+
+- name: generate default locale
+  locale_gen:
+    name: "{{ default_locale }}"
+    state: present
+
+- name: set default locale
+  template:
+    src: locale.default
+    dest: /etc/default/locale
+    backup: yes
+    owner: root
+    group: root
+    mode: "0644"
